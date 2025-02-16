@@ -1,0 +1,29 @@
+{
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "init": "^0.1.2",
+    "jsonwebtoken": "^9.0.2",
+    "npm": "^11.1.0",
+    "sqlite3": "^5.0.2"
+  },
+  "name": "vaultly-main",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "kill-port": "node kill-port.js",
+    "start": "npm run kill-port && nodemon src/server/index.js",
+    "dev": "npm run kill-port && nodemon src/server/index.js --watch src",
+    "init-db": "node src/database/init-db.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

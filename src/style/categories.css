@@ -1,0 +1,153 @@
+/* General Reset */
+body, h1, button, ul, li, a, div {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f9f9f9;
+}
+
+/* Header Styles */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    height: 70px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000; /* Ensures the header is always on top */
+}
+
+/* Centered Title with Logo */
+.title-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+}
+
+.logo {
+    height: 40px;
+    width: auto;
+    margin-right: 10px;
+}
+
+.title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #78a864;
+    text-align: center;
+}
+
+/* Sign-Out Button */
+.signout-btn {
+    background-color: #9ad97f;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.signout-btn:hover {
+    background-color: #86c76e;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: 250px;
+    height: calc(100vh - 70px);
+    background-color: #f8f9fa;
+    border-right: 1px solid #e0e0e0;
+    position: fixed;
+    top: 70px; /* Places the sidebar directly below the header */
+    left: 0;
+    z-index: 900; /* Ensures the sidebar stays below the header */
+    overflow-y: auto;
+    padding-top: 20px;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar-menu li {
+    margin: 15px 0;
+}
+
+.sidebar-menu a {
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    padding: 10px 20px;
+    display: block;
+    border-radius: 5px;
+}
+
+.sidebar-menu a.active,
+.sidebar-menu a:hover {
+    background-color: #9ad97f;
+    color: white;
+}
+
+/* Main Content */
+.main-content {
+    margin-left: 250px;
+    padding: 80px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: calc(100vh - 80px); /* Full height minus header */
+}
+
+/* Top Section */
+.top-section, .bottom-section {
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.category-box {
+    background-color: #78a864;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    flex: 1; /* Ensures equal width */
+    margin-top: 4%;
+    height: 200px; /* Equal height for all boxes */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: white;
+    text-align: center;
+}
+
+/* Specific Box Colors (Optional) */
+.top-left {
+    background-color: #86c76e;
+}
+
+.top-right {
+    background-color: #9ad97f;
+}
+
+.bottom-left {
+    background-color: #78a864;
+}
+
+.bottom-right {
+    background-color: #9ad97f;
+}
