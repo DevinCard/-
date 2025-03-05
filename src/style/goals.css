@@ -121,52 +121,354 @@ body {
 .multi-goal-box {
     background-color: #78a864;
     border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    height: 300px; /* Takes 1/4 of the main content height */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    font-weight: 600;
+    height: 400px;
+}
+
+.multi-goal-box h2 {
     color: white;
+    margin-bottom: 20px;
     text-align: center;
+}
+
+#goalsTimelineChart {
+    background-color: white;
+    border-radius: 8px;
+    padding: 15px;
+    height: calc(100% - 60px);
 }
 
 /* Your Goals Box */
 .your-goals-box {
-    background-color: #9ad97f;
+    background-color: #78a864;
     border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    height: 300px; 
-    position: relative; 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    font-weight: 500;
-    color: white;
-    text-align: center;
-    padding-top: 20px;
+    min-height: 200px;
+    position: relative;
 }
 
-/* New Goal Button */
-.new-goal-btn {
-    background-color: #86c76e;
+.your-goals-box h2 {
     color: white;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Container styles */
+.goals-container {
+    position: relative;
+    width: 100%;
+    padding: 20px 0;
+}
+
+.goals-wrapper {
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+}
+
+.goals-scroll {
+    display: flex;
+    gap: 20px;
+    padding: 0 20px;
+    transition: transform 0.3s ease;
+}
+
+/* Scroll buttons */
+.scroll-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    background: white;
     border: none;
-    padding: 10px 15px;
-    border-radius: 5px;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     cursor: pointer;
-    font-size: 14px;
-    font-family: 'Poppins', sans-serif;
+    z-index: 10;
+    display: none;
+    transition: all 0.3s ease;
+}
+
+.scroll-btn:hover {
+    background: #f0f0f0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.scroll-left {
+    left: 10px;
+}
+
+.scroll-right {
+    right: 10px;
+}
+
+/* Goal card styles */
+.goal-card {
+    flex: 0 0 300px; /* Fixed width, no growing or shrinking */
+    max-width: 300px;
+    margin: 0;
+    opacity: 1;
+    transition: all 0.3s ease;
+}
+
+/* Animations */
+@keyframes fadeOut {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.8); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.goal-card.new {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Goal Card Styles */
+.goal-card {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    margin: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    width: 300px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.goal-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.goal-circle {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+}
+
+.category-emoji-background {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 64px;
+    opacity: 0.2;
+    z-index: 1;
+    pointer-events: none;
+    user-select: none;
+}
+
+.progress-ring {
+    transform: rotate(-90deg);
+    position: relative;
+    z-index: 2;
+}
+
+.progress-text-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    width: 80%;
+    z-index: 3;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    padding: 10px;
+}
+
+.percentage {
+    font-size: 18px;
+    font-weight: bold;
+    color: #4CAF50;
+    margin-bottom: 2px;
+}
+
+.amount {
+    font-size: 12px;
+    color: #666;
+    white-space: nowrap;
+}
+
+/* Update existing progress ring styles */
+.progress-ring-circle {
+    transition: stroke-dashoffset 0.35s;
+    transform-origin: center;
+}
+
+.progress-ring-circle-bg {
+    transform-origin: center;
+}
+
+.goal-info {
+    text-align: center;
+    width: 100%;
+}
+
+.goal-info h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.2em;
+}
+
+.goal-category {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 4px 12px;
+    background: #f0f0f0;
+    border-radius: 15px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.goal-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.add-money-btn, .remove-money-btn, .delete-goal-btn {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.add-money-btn {
+    background: #4CAF50;
+    color: white;
+}
+
+.add-money-btn:hover {
+    background: #45a049;
+}
+
+.remove-money-btn {
+    background: #ff9800;  /* Orange color for remove money */
+    color: white;
+}
+
+.remove-money-btn:hover {
+    background: #f57c00;  /* Darker orange on hover */
+}
+
+.delete-goal-btn {
+    background: #ff4444;
+    color: white;
+}
+
+.delete-goal-btn:hover {
+    background: #ff3333;
+}
+
+.new-goal-btn {
     position: absolute;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
+    padding: 10px 20px;
+    background-color: white;
+    color: #78a864;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
 }
 
 .new-goal-btn:hover {
-    background-color: #78a864;
+    background-color: #f0f0f0;
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    margin: 10% auto;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+}
+
+.close {
+    position: absolute;
+    right: 20px;
+    top: 10px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.submit-btn {
+    background: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Make sure modal is above everything else */
+.modal.show {
+    display: block;
+}
+
+.no-goals {
+    text-align: center;
+    color: #666;
+    font-size: 1.1em;
+    margin: 20px;
 }

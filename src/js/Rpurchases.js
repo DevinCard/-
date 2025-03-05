@@ -2,7 +2,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
         await loadUpcomingPurchases();
         await loadPreviousPurchases();
-        initializeProjectedBudgetGraph();
+        await initializeProjectedBudgetGraph(12);
+
+        // Add range button listeners
+        const rangeButtons = document.querySelectorAll('.range-btn');
+        rangeButtons.forEach(button => {
+            button.addEventListener('click', async () => {
+                // Update active state
+                rangeButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+
+                // Update graph with new range
+                const months = parseInt(button.dataset.months);
+                await initializeProjectedBudgetGraph(months);
+            });
+        });
+
     } catch (error) {
         console.error('Error initializing recurring purchases:', error);
     }
@@ -155,29 +170,225 @@ function formatRecurringText(transaction) {
     ).join('-');
 }
 
-function initializeProjectedBudgetGraph() {
-    const ctx = document.getElementById('projectedBudgetChart');
-    if (!ctx) return;
+async function initializeProjectedBudgetGraph(months = 12) {
+    const chartElement = document.getElementById('projectedBudgetChart');
+    if (!chartElement) return;
 
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [], // Will be populated with dates
-            datasets: [{
-                label: 'Projected Balance',
-                data: [], // Will be populated with balance projections
-                borderColor: 'rgb(75, 192, 192)',
-                tension: 0.1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
+    try {
+        const balanceData = await api.getBalance();
+        const transactions = await api.getTransactions();
+        const recurringTransactions = transactions.filter(t => t.recurring && t.recurring !== 'one-time');
+
+        const projectionData = calculateBalanceProjection(balanceData.balance, recurringTransactions, months);
+
+        const options = {
+            series: [{
+                name: 'Projected Balance',
+                data: projectionData.balances
+            }],
+            chart: {
+                type: 'area',
+                height: '100%',
+                width: '100%',
+                fontFamily: 'Poppins, sans-serif',
+                toolbar: {
+                    show: true,
+                    tools: {
+                        download: false,
+                        selection: true,
+                        zoom: true,
+                        zoomin: true,
+                        zoomout: true,
+                        pan: true,
+                    }
+                },
+                animations: {
+                    enabled: true,
+                    easing: 'easeinout',
+                    speed: 800,
+                    animateGradually: {
+                        enabled: true,
+                        delay: 150
+                    },
+                    dynamicAnimation: {
+                        enabled: true,
+                        speed: 350
+                    }
+                }
+            },
+            dataLabels: {
+                enabled: false
+            },
+            xaxis: {
+                categories: projectionData.labels,
+                labels: {
+                    style: {
+                        colors: '#666',
+                        fontSize: '12px'
+                    }
+                },
+                axisBorder: {
+                    show: false
+                },
+                axisTicks: {
+                    show: false
+                }
+            },
+            yaxis: {
+                labels: {
+                    formatter: function(value) {
+                        return '$' + value.toFixed(0);
+                    },
+                    style: {
+                        colors: '#666',
+                        fontSize: '12px'
+                    }
+                }
+            },
+            stroke: {
+                curve: 'smooth',
+                width: 3,
+                colors: projectionData.balances.map(balance => balance >= 0 ? '#78a864' : '#ff6b6b')
+            },
+            colors: projectionData.balances.map(balance => balance >= 0 ? '#78a864' : '#ff6b6b'),
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.7,
+                    opacityTo: 0.2,
+                    stops: [0, 90, 100],
+                    colorStops: projectionData.balances.map((balance, index) => ([
+                        {
+                            offset: 0,
+                            color: balance >= 0 ? '#78a864' : '#ff6b6b',
+                            opacity: 0.7
+                        },
+                        {
+                            offset: 100,
+                            color: balance >= 0 ? '#78a864' : '#ff6b6b',
+                            opacity: 0.2
+                        }
+                    ]))
+                }
+            },
+            markers: {
+                size: 4,
+                colors: projectionData.balances.map(balance => balance >= 0 ? '#78a864' : '#ff6b6b'),
+                strokeColors: '#fff',
+                strokeWidth: 2,
+                hover: {
+                    size: 7,
+                }
+            },
+            tooltip: {
+                theme: 'light',
                 y: {
-                    beginAtZero: true
+                    formatter: function(value) {
+                        return '$' + value.toFixed(2);
+                    }
+                },
+                style: {
+                    fontSize: '12px',
+                    fontFamily: 'Poppins, sans-serif'
+                },
+                custom: function({ series, seriesIndex, dataPointIndex }) {
+                    const value = series[seriesIndex][dataPointIndex];
+                    const color = value >= 0 ? '#78a864' : '#ff6b6b';
+                    return '<div class="custom-tooltip" style="padding: 8px; border-left: 3px solid ' + color + '">' +
+                           '<span style="color: ' + color + '">$' + value.toFixed(2) + '</span>' +
+                           '</div>';
                 }
             }
+        };
+
+        // If there's an existing chart, destroy it
+        if (window.projectedBudgetChart) {
+            window.projectedBudgetChart.destroy();
         }
-    });
+
+        // Create new chart and store reference
+        window.projectedBudgetChart = new ApexCharts(chartElement, options);
+        window.projectedBudgetChart.render();
+
+        // Add window resize handler
+        window.addEventListener('resize', () => {
+            window.projectedBudgetChart.updateOptions({
+                chart: {
+                    height: '100%',
+                    width: '100%'
+                }
+            });
+        });
+
+    } catch (error) {
+        console.error('Error initializing graph:', error);
+    }
+}
+
+function calculateBalanceProjection(currentBalance, recurringTransactions, months = 12) {
+    const labels = [];
+    const balances = [];
+    let runningBalance = currentBalance;
+    const today = new Date();
+    
+    // Project for specified number of months
+    for (let i = 0; i < months; i++) {
+        const date = new Date(today);
+        date.setMonth(today.getMonth() + i);
+        labels.push(date.toLocaleString('default', { month: 'short', year: '2-digit' }));
+        
+        // Calculate impact of recurring transactions for this month
+        recurringTransactions.forEach(transaction => {
+            const amount = transaction.amount;
+            let monthlyImpact = 0;
+
+            switch(transaction.recurring) {
+                case 'daily':
+                    monthlyImpact = amount * 30;
+                    break;
+                case 'weekly':
+                    monthlyImpact = amount * 4;
+                    break;
+                case 'bi-weekly':
+                    monthlyImpact = amount * 2;
+                    break;
+                case 'monthly':
+                    monthlyImpact = amount;
+                    break;
+                case 'yearly':
+                    monthlyImpact = amount / 12;
+                    break;
+                case 'custom':
+                    if (transaction.recurrenceInterval) {
+                        const [interval, unit] = transaction.recurrenceInterval.split('-');
+                        switch(unit) {
+                            case 'days':
+                                monthlyImpact = (amount * 30) / parseInt(interval);
+                                break;
+                            case 'weeks':
+                                monthlyImpact = (amount * 4) / parseInt(interval);
+                                break;
+                            case 'months':
+                                monthlyImpact = amount / parseInt(interval);
+                                break;
+                            case 'years':
+                                monthlyImpact = amount / (12 * parseInt(interval));
+                                break;
+                        }
+                    }
+                    break;
+            }
+
+            if (transaction.type === 'Withdrawal') {
+                runningBalance -= monthlyImpact;
+            } else {
+                runningBalance += monthlyImpact;
+            }
+        });
+
+        balances.push(runningBalance);
+    }
+
+    return { labels, balances };
 } 

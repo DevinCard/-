@@ -6,6 +6,7 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const authMiddleware = require('./middleware/auth');
+const goalsRouter = require('./routes/goals');
 
 const app = express();
 const port = 3001;
@@ -28,17 +29,19 @@ const db = new sqlite3.Database(path.join(__dirname, '../database/vaultly.db'), 
 function initializeDatabase() {
     db.serialize(() => {
         // Drop existing tables in reverse order of dependencies
+        db.run(`DROP TABLE IF EXISTS goals`);
         db.run(`DROP TABLE IF EXISTS transactions`);
         db.run(`DROP TABLE IF EXISTS categories`);
         db.run(`DROP TABLE IF EXISTS users`);
 
-        // Create users table first
+        // Create users table with balance column
         db.run(`
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 full_name TEXT NOT NULL,
                 email TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL
+                password TEXT NOT NULL,
+                balance DECIMAL(10,2) DEFAULT 0.00
             )
         `, (err) => {
             if (err) console.error('Error creating users table:', err);
@@ -84,6 +87,22 @@ function initializeDatabase() {
             ('Utilities', '💡', 1, NULL)
         `, (err) => {
             if (err) console.error('Error inserting default categories:', err);
+        });
+
+        // Add goals table
+        db.run(`
+            CREATE TABLE IF NOT EXISTS goals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                title TEXT NOT NULL,
+                target_amount DECIMAL(10,2) NOT NULL,
+                current_amount DECIMAL(10,2) DEFAULT 0,
+                category TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        `, (err) => {
+            if (err) console.error('Error creating goals table:', err);
         });
     });
 }
@@ -396,7 +415,18 @@ app.get('/rpurchases', (req, res) => {
     res.sendFile(path.join(__dirname, '../resource/Rpurchases.html'));
 });
 
+// Mount the goals router with the /api prefix
+app.use('/api', goalsRouter);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Something broke!' });
+});
+
 // Start server
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
+
+module.exports = app;
